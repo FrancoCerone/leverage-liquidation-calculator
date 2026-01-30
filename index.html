@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Leverage Liquidation Calculator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Font Inter come nel tuo index.css -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- REACT via CDN -->
+    <script
+      crossorigin
+      src="https://unpkg.com/react@18/umd/react.development.js"
+    ></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"
+    ></script>
+
+    <style>
+      /* --- Base stile ispirato al tuo index.css (dark, glass, Inter) --- */
+      :root {
+        --bg-main: #020617;
+        --bg-card: rgba(15, 23, 42, 0.9);
+        --bg-card-soft: rgba(15, 23, 42, 0.7);
+        --border-soft: rgba(148, 163, 184, 0.4);
+        --accent: #0ea5e9;
+        --accent-soft: rgba(14, 165, 233, 0.2);
+        --text-main: #f9fafb;
+        --text-muted: #9ca3af;
+        --danger: #ef4444;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        background: radial-gradient(circle at top, #020617 0, #000 55%, #020617 100%);
+        color: var(--text-main);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+
+      .page-container {
+        width: 100%;
+        max-width: 960px;
+      }
+
+      .card {
+        background: var(--bg-card);
+        border-radius: 24px;
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        box-shadow:
+          0 24px 45px rgba(15, 23, 42, 0.7),
+          0 0 0 1px rgba(15, 23, 42, 0.9);
+        padding: 24px;
+        backdrop-filter: blur(18px);
+      }
+
+      @media (min-width: 768px) {
+        .card {
+          padding: 32px 36px;
+        }
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 24px;
+      }
+
+      .title {
+        font-size: 1.6rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        margin: 0 0 6px;
+        text-shadow: 0 0 20px rgba(14, 165, 233, 0.4);
+      }
+
+      @media (min-width: 768px) {
+        .title {
+          font-size: 2rem;
+        }
+      }
+
+      .subtitle {
+        margin: 0;
+        font-size: 0.9rem;
+        color: var(--text-muted);
+      }
+
+      .layout {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      @media (min-width: 768px) {
+        .layout {
+          flex-direction: row;
+        }
+      }
+
+      .panel {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .panel.inputs {
+        background: var(--bg-card-soft);
+        border-radius: 18px;
+        padding: 18px 18px 20px;
+        border: 1px solid rgba(148, 163, 184, 0.35);
+      }
+
+      @media (min-width: 768px) {
+        .panel.inputs {
+          padding: 22px 22px 24px;
+        }
+      }
+
+      .panel.results {
+        background: radial-gradient(circle at top left, #0b1120 0, #020617 40%, #030712 100%);
+        border-radius: 18px;
+        padding: 18px 18px 20px;
+        border: 1px solid rgba(56, 189, 248, 0.6);
+        box-shadow:
+          0 0 0 1px rgba(8, 47, 73, 0.8),
+          0 18px 40px rgba(8, 47, 73, 0.75);
+      }
+
+      @media (min-width: 768px) {
+        .panel.results {
+          padding: 22px 22px 24px;
+        }
+      }
+
+      .panel-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-muted);
+        margin-bottom: 16px;
+      }
+
+      .panel-title span {
+        color: var(--accent);
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+
+      @media (min-width: 640px) {
+        .form-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      .form-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .label-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 8px;
+      }
+
+      .label {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-main);
+      }
+
+      .label-hint {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+      }
+
+      .input,
+      .select {
+        width: 100%;
+        border-radius: 0.75rem;
+        border: 1px solid rgba(148, 163, 184, 0.45);
+        background: rgba(15, 23, 42, 0.9);
+        padding: 10px 12px;
+        color: var(--text-main);
+        font-size: 0.9rem;
+        outline: none;
+        transition: border-color 0.18s ease, box-shadow 0.18s ease,
+          background-color 0.18s ease, transform 0.1s ease;
+        box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.9);
+        appearance: none;
+      }
+
+      .input::placeholder {
+        color: rgba(148, 163, 184, 0.7);
+      }
+
+      .input:focus,
+      .select:focus {
+        border-color: var(--accent);
+        box-shadow:
+          0 0 0 1px rgba(56, 189, 248, 0.7),
+          0 0 0 6px rgba(56, 189, 248, 0.18);
+        background-color: #020617;
+        transform: translateY(-1px);
+      }
+
+      .select {
+        background-image: linear-gradient(45deg, transparent 50%, var(--accent) 50%),
+          linear-gradient(135deg, var(--accent) 50%, transparent 50%);
+        background-position: calc(100% - 14px) calc(50% - 3px),
+          calc(100% - 9px) calc(50% - 3px);
+        background-size: 6px 6px, 6px 6px;
+        background-repeat: no-repeat;
+        padding-right: 28px;
+        cursor: pointer;
+      }
+
+      .results-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      @media (min-width: 640px) {
+        .results-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .result-item {
+        padding: 10px 12px;
+        border-radius: 0.9rem;
+        border: 1px solid rgba(148, 163, 184, 0.4);
+        background: radial-gradient(circle at top left,
+            rgba(15, 23, 42, 0.95) 0,
+            rgba(15, 23, 42, 0.9) 40%,
+            rgba(15, 23, 42, 0.98) 100%);
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .result-label {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .result-value {
+        font-size: 1.1rem;
+        font-weight: 600;
+      }
+
+      .result-value-accent {
+        color: var(--accent);
+      }
+
+      .result-value-danger {
+        color: var(--danger);
+      }
+
+      .badge-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .badge {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        padding: 4px 8px;
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.5);
+        background: rgba(15, 23, 42, 0.9);
+        color: var(--text-muted);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .badge-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: var(--accent);
+        box-shadow: 0 0 8px rgba(56, 189, 248, 0.8);
+      }
+
+      .badge-risk {
+        border-color: rgba(248, 250, 252, 0.2);
+        background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(56, 189, 248, 0.2));
+        color: #e0f2fe;
+      }
+
+      .badge-risk .badge-dot {
+        background: #f97316;
+        box-shadow: 0 0 8px rgba(249, 115, 22, 0.85);
+      }
+
+      .note {
+        margin-top: 18px;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        line-height: 1.5;
+        border-top: 1px dashed rgba(148, 163, 184, 0.35);
+        padding-top: 10px;
+      }
+
+      .note strong {
+        color: #e5e7eb;
+        font-weight: 500;
+      }
+
+      /* Piccolo “chip” di test di esempio */
+      .example-chip {
+        margin-top: 6px;
+        font-size: 0.72rem;
+        color: rgba(148, 163, 184, 0.9);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .example-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 999px;
+        background: rgba(34, 197, 94, 0.9);
+        box-shadow: 0 0 6px rgba(34, 197, 94, 0.9);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script>
+      const { useState, useMemo } = React;
+
+      function formatNumber(value, options) {
+        if (value === null || value === undefined || Number.isNaN(value)) return "-";
+        const formatter = new Intl.NumberFormat("it-IT", options || {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+        return formatter.format(value);
+      }
+
+      function App() {
+        const [capital, setCapital] = useState("");
+        const [leverage, setLeverage] = useState("");
+        const [price, setPrice] = useState("");
+        const [positionType, setPositionType] = useState("LONG");
+
+        const { positionValue, liquidationPercent, liquidationPrice } = useMemo(() => {
+          const cap = parseFloat(capital);
+          const lev = parseFloat(leverage);
+          const prc = parseFloat(price);
+
+          if (!cap || !lev || !prc || lev <= 0) {
+            return {
+              positionValue: null,
+              liquidationPercent: null,
+              liquidationPrice: null,
+            };
+          }
+
+          const positionValueCalc = cap * lev;
+          const liquidationPercentCalc = 1 / lev; // frazione (0-1)
+
+          let liquidationPriceCalc = null;
+          if (positionType === "LONG") {
+            liquidationPriceCalc = prc * (1 - liquidationPercentCalc);
+          } else {
+            liquidationPriceCalc = prc * (1 + liquidationPercentCalc);
+          }
+
+          return {
+            positionValue: positionValueCalc,
+            liquidationPercent: liquidationPercentCalc * 100,
+            liquidationPrice: liquidationPriceCalc,
+          };
+        }, [capital, leverage, price, positionType]);
+
+        return (
+          React.createElement("div", { className: "page-container" },
+            React.createElement("div", { className: "card" },
+              React.createElement("div", { className: "header" },
+                React.createElement("h1", { className: "title" }, "Leverage Liquidation Calculator"),
+                React.createElement("p", { className: "subtitle" },
+                  "Calcolo teorico del valore posizione, variazione di liquidazione e prezzo di liquidazione."
+                )
+              ),
+              React.createElement("div", { className: "layout" },
+                React.createElement("div", { className: "panel inputs" },
+                  React.createElement("div", { className: "panel-title" },
+                    "Parametri ", React.createElement("span", null, "posizione")
+                  ),
+                  React.createElement("div", { className: "form-grid" },
+                    React.createElement("div", { className: "form-field" },
+                      React.createElement("div", { className: "label-row" },
+                        React.createElement("label", { className: "label" }, "Capitale investito (USDT)"),
+                        React.createElement("span", { className: "label-hint" }, "es. 1000")
+                      ),
+                      React.createElement("input", {
+                        className: "input",
+                        type: "number",
+                        min: "0",
+                        step: "0.01",
+                        placeholder: "Inserisci capitale",
+                        value: capital,
+                        onChange: (e) => setCapital(e.target.value),
+                      })
+                    ),
+                    React.createElement("div", { className: "form-field" },
+                      React.createElement("div", { className: "label-row" },
+                        React.createElement("label", { className: "label" }, "Leva"),
+                        React.createElement("span", { className: "label-hint" }, "2, 3, 5, 10...")
+                      ),
+                      React.createElement("input", {
+                        className: "input",
+                        type: "number",
+                        min: "1",
+                        step: "0.1",
+                        placeholder: "Inserisci leva",
+                        value: leverage,
+                        onChange: (e) => setLeverage(e.target.value),
+                      })
+                    ),
+                    React.createElement("div", { className: "form-field" },
+                      React.createElement("div", { className: "label-row" },
+                        React.createElement("label", { className: "label" }, "Prezzo dell'asset"),
+                        React.createElement("span", { className: "label-hint" }, "es. 50000")
+                      ),
+                      React.createElement("input", {
+                        className: "input",
+                        type: "number",
+                        min: "0",
+                        step: "0.01",
+                        placeholder: "Inserisci prezzo",
+                        value: price,
+                        onChange: (e) => setPrice(e.target.value),
+                      })
+                    ),
+                    React.createElement("div", { className: "form-field" },
+                      React.createElement("div", { className: "label-row" },
+                        React.createElement("label", { className: "label" }, "Tipo posizione"),
+                        React.createElement("span", { className: "label-hint" }, "LONG / SHORT")
+                      ),
+                      React.createElement("select", {
+                        className: "select",
+                        value: positionType,
+                        onChange: (e) => setPositionType(e.target.value),
+                      },
+                        React.createElement("option", { value: "LONG" }, "LONG (aperto al rialzo)"),
+                        React.createElement("option", { value: "SHORT" }, "SHORT (aperto al ribasso)")
+                      )
+                    )
+                  ),
+                  React.createElement("div", { className: "example-chip" },
+                    React.createElement("span", { className: "example-dot" }),
+                    React.createElement("span", null,
+                      "Test di esempio: capitale 1000, leva 3, prezzo 50000, LONG."
+                    )
+                  )
+                ),
+                React.createElement("div", { className: "panel results" },
+                  React.createElement("div", { className: "panel-title" },
+                    "Risultati ", React.createElement("span", null, "in tempo reale")
+                  ),
+                  React.createElement("div", { className: "badge-row" },
+                    React.createElement("div", { className: "badge" },
+                      React.createElement("span", { className: "badge-dot" }),
+                      "Semplificato: ", React.createElement("span", null, "liquidazione = 1 / leva")
+                    ),
+                    React.createElement("div", { className: "badge badge-risk" },
+                      React.createElement("span", { className: "badge-dot" }),
+                      "Rischio aumenta con la leva"
+                    )
+                  ),
+                  React.createElement("div", { className: "results-grid" },
+                    React.createElement("div", { className: "result-item" },
+                      React.createElement("div", { className: "result-label" }, "Valore totale posizione"),
+                      React.createElement("div", {
+                        className: "result-value result-value-accent",
+                      }, positionValue === null
+                        ? "-"
+                        : formatNumber(positionValue, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }) + " USDT"
+                      )
+                    ),
+                    React.createElement("div", { className: "result-item" },
+                      React.createElement("div", { className: "result-label" }, "Variazione a liquidazione"),
+                      React.createElement("div", {
+                        className: "result-value result-value-danger",
+                      }, liquidationPercent === null
+                        ? "-"
+                        : formatNumber(liquidationPercent, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }) + " %"
+                      )
+                    ),
+                    React.createElement("div", { className: "result-item" },
+                      React.createElement("div", { className: "result-label" }, "Prezzo di liquidazione"),
+                      React.createElement("div", {
+                        className: "result-value",
+                      }, liquidationPrice === null
+                        ? "-"
+                        : formatNumber(liquidationPrice, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })
+                      )
+                    )
+                  ),
+                  React.createElement("div", { className: "note" },
+                    React.createElement("strong", null, "Nota importante: "),
+                    "Calcolo teorico, la liquidazione reale dipende da exchange, fee e maintenance margin."
+                  )
+                )
+              )
+            )
+          )
+        );
+      }
+
+      const root = ReactDOM.createRoot(document.getElementById("root"));
+      root.render(React.createElement(App));
+    </script>
+  </body>
+</html>
+
