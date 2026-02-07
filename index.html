@@ -166,7 +166,7 @@
         }
       }
 
-      /* Riga unica: Tipo posizione, Prezzo, Capitale */
+      /* Single row: Position type, Asset price, Capital */
       .inputs-row {
         display: grid;
         grid-template-columns: 1fr 1fr 1fr;
@@ -174,10 +174,8 @@
         align-items: end;
       }
 
-      @media (max-width: 767px) {
-        .inputs-row {
-          grid-template-columns: 1fr;
-        }
+      .inputs-row .form-field {
+        min-width: 0;
       }
 
       /* Blocco slider leva */
