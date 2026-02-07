@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <title>Leverage Liquidation Calculator</title>
@@ -108,14 +108,7 @@
         gap: 24px;
       }
 
-      @media (min-width: 768px) {
-        .layout {
-          flex-direction: row;
-        }
-      }
-
       .panel {
-        flex: 1;
         min-width: 0;
       }
 
@@ -171,6 +164,122 @@
         .form-grid {
           grid-template-columns: 1fr 1fr;
         }
+      }
+
+      /* Riga unica: Tipo posizione, Prezzo, Capitale */
+      .inputs-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 14px;
+        align-items: end;
+      }
+
+      @media (max-width: 767px) {
+        .inputs-row {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Blocco slider leva */
+      .leverage-block {
+        margin-bottom: 24px;
+      }
+
+      .leverage-label {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 12px;
+        display: block;
+      }
+
+      .leverage-display-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+
+      .leverage-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        border: 1px solid rgba(148, 163, 184, 0.45);
+        background: rgba(15, 23, 42, 0.9);
+        color: var(--text-main);
+        font-size: 1.25rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: border-color 0.2s, background 0.2s, transform 0.1s;
+      }
+
+      .leverage-btn:hover {
+        border-color: var(--accent);
+        background: rgba(14, 165, 233, 0.15);
+      }
+
+      .leverage-btn:active {
+        transform: scale(0.96);
+      }
+
+      .leverage-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--accent);
+        min-width: 80px;
+        text-align: center;
+        text-shadow: 0 0 20px rgba(14, 165, 233, 0.4);
+      }
+
+      .leverage-slider-wrap {
+        padding: 0 4px;
+      }
+
+      .leverage-slider {
+        width: 100%;
+        height: 8px;
+        border-radius: 4px;
+        background: rgba(148, 163, 184, 0.25);
+        outline: none;
+        -webkit-appearance: none;
+        appearance: none;
+      }
+
+      .leverage-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: var(--accent);
+        cursor: pointer;
+        box-shadow: 0 0 12px rgba(14, 165, 233, 0.7);
+        border: 3px solid var(--bg-card);
+      }
+
+      .leverage-slider::-moz-range-thumb {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: var(--accent);
+        cursor: pointer;
+        box-shadow: 0 0 12px rgba(14, 165, 233, 0.7);
+        border: 3px solid var(--bg-card);
+      }
+
+      .leverage-ticks {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 6px;
+        padding: 0 2px;
+        font-size: 0.7rem;
+        color: var(--text-muted);
       }
 
       .form-field {
@@ -251,27 +360,33 @@
       }
 
       .result-item {
-        padding: 10px 12px;
+        padding: 12px 14px;
         border-radius: 0.9rem;
         border: 1px solid rgba(148, 163, 184, 0.4);
-        background: radial-gradient(circle at top left,
-            rgba(15, 23, 42, 0.95) 0,
-            rgba(15, 23, 42, 0.9) 40%,
-            rgba(15, 23, 42, 0.98) 100%);
+        background: rgba(15, 23, 42, 0.6);
         display: flex;
         flex-direction: column;
-        gap: 4px;
+        gap: 8px;
       }
 
       .result-label {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         color: var(--text-muted);
         text-transform: uppercase;
         letter-spacing: 0.08em;
       }
 
+      .result-label-line {
+        height: 1px;
+        margin: 2px 0 4px 0;
+      }
+
+      .result-item:nth-child(1) .result-label-line { background: linear-gradient(90deg, var(--accent) 0%, transparent 100%); }
+      .result-item:nth-child(2) .result-label-line { background: linear-gradient(90deg, var(--danger) 0%, transparent 100%); }
+      .result-item:nth-child(3) .result-label-line { background: linear-gradient(90deg, rgba(148, 163, 184, 0.6) 0%, transparent 100%); }
+
       .result-value {
-        font-size: 1.1rem;
+        font-size: 1.15rem;
         font-weight: 600;
       }
 
@@ -364,25 +479,28 @@
 
       function formatNumber(value, options) {
         if (value === null || value === undefined || Number.isNaN(value)) return "-";
-        const formatter = new Intl.NumberFormat("it-IT", options || {
+        const formatter = new Intl.NumberFormat("en-US", options || {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         });
         return formatter.format(value);
       }
 
+      const LEVERAGE_MIN = 1;
+      const LEVERAGE_MAX = 100;
+
       function App() {
         const [capital, setCapital] = useState("");
-        const [leverage, setLeverage] = useState("");
+        const [leverage, setLeverage] = useState(3);
         const [price, setPrice] = useState("");
         const [positionType, setPositionType] = useState("LONG");
 
         const { positionValue, liquidationPercent, liquidationPrice } = useMemo(() => {
           const cap = parseFloat(capital);
-          const lev = parseFloat(leverage);
+          const lev = leverage;
           const prc = parseFloat(price);
 
-          if (!cap || !lev || !prc || lev <= 0) {
+          if (!cap || !prc || lev <= 0) {
             return {
               positionValue: null,
               liquidationPercent: null,
@@ -391,7 +509,7 @@
           }
 
           const positionValueCalc = cap * lev;
-          const liquidationPercentCalc = 1 / lev; // frazione (0-1)
+          const liquidationPercentCalc = 1 / lev;
 
           let liquidationPriceCalc = null;
           if (positionType === "LONG") {
@@ -411,105 +529,92 @@
           React.createElement("div", { className: "page-container" },
             React.createElement("div", { className: "card" },
               React.createElement("div", { className: "header" },
-                React.createElement("h1", { className: "title" }, "Leverage Liquidation Calculator"),
-                React.createElement("p", { className: "subtitle" },
-                  "Calcolo teorico del valore posizione, variazione di liquidazione e prezzo di liquidazione."
-                )
+                React.createElement("h1", { className: "title" }, "Leverage Liquidation Calculator")
               ),
               React.createElement("div", { className: "layout" },
                 React.createElement("div", { className: "panel inputs" },
-                  React.createElement("div", { className: "panel-title" },
-                    "Parametri ", React.createElement("span", null, "posizione")
-                  ),
-                  React.createElement("div", { className: "form-grid" },
-                    React.createElement("div", { className: "form-field" },
-                      React.createElement("div", { className: "label-row" },
-                        React.createElement("label", { className: "label" }, "Capitale investito (USDT)"),
-                        React.createElement("span", { className: "label-hint" }, "es. 1000")
-                      ),
-                      React.createElement("input", {
-                        className: "input",
-                        type: "number",
-                        min: "0",
-                        step: "0.01",
-                        placeholder: "Inserisci capitale",
-                        value: capital,
-                        onChange: (e) => setCapital(e.target.value),
-                      })
+                  React.createElement("div", { className: "leverage-block" },
+                    React.createElement("label", { className: "leverage-label" }, "Leverage"),
+                    React.createElement("div", { className: "leverage-display-row" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "leverage-btn",
+                        "aria-label": "Decrease leverage",
+                        onClick: function() { setLeverage(function(v) { return Math.max(LEVERAGE_MIN, v - 1); }); },
+                      }, "−"),
+                      React.createElement("span", { className: "leverage-value" }, leverage + "X"),
+                      React.createElement("button", {
+                        type: "button",
+                        className: "leverage-btn",
+                        "aria-label": "Increase leverage",
+                        onClick: function() { setLeverage(function(v) { return Math.min(LEVERAGE_MAX, v + 1); }); },
+                      }, "+")
                     ),
-                    React.createElement("div", { className: "form-field" },
-                      React.createElement("div", { className: "label-row" },
-                        React.createElement("label", { className: "label" }, "Leva"),
-                        React.createElement("span", { className: "label-hint" }, "2, 3, 5, 10...")
-                      ),
+                    React.createElement("div", { className: "leverage-slider-wrap" },
                       React.createElement("input", {
-                        className: "input",
-                        type: "number",
-                        min: "1",
-                        step: "0.1",
-                        placeholder: "Inserisci leva",
+                        type: "range",
+                        className: "leverage-slider",
+                        min: LEVERAGE_MIN,
+                        max: LEVERAGE_MAX,
                         value: leverage,
-                        onChange: (e) => setLeverage(e.target.value),
+                        onChange: (e) => setLeverage(parseInt(e.target.value, 10)),
                       })
                     ),
+                    React.createElement("div", { className: "leverage-ticks" },
+                      React.createElement("span", null, "1X"),
+                      React.createElement("span", null, "25X"),
+                      React.createElement("span", null, "50X"),
+                      React.createElement("span", null, "75X"),
+                      React.createElement("span", null, "100X")
+                    )
+                  ),
+                  React.createElement("div", { className: "inputs-row" },
                     React.createElement("div", { className: "form-field" },
-                      React.createElement("div", { className: "label-row" },
-                        React.createElement("label", { className: "label" }, "Prezzo dell'asset"),
-                        React.createElement("span", { className: "label-hint" }, "es. 50000")
-                      ),
-                      React.createElement("input", {
-                        className: "input",
-                        type: "number",
-                        min: "0",
-                        step: "0.01",
-                        placeholder: "Inserisci prezzo",
-                        value: price,
-                        onChange: (e) => setPrice(e.target.value),
-                      })
-                    ),
-                    React.createElement("div", { className: "form-field" },
-                      React.createElement("div", { className: "label-row" },
-                        React.createElement("label", { className: "label" }, "Tipo posizione"),
-                        React.createElement("span", { className: "label-hint" }, "LONG / SHORT")
-                      ),
+                      React.createElement("label", { className: "label" }, "Position type"),
                       React.createElement("select", {
                         className: "select",
                         value: positionType,
                         onChange: (e) => setPositionType(e.target.value),
                       },
-                        React.createElement("option", { value: "LONG" }, "LONG (aperto al rialzo)"),
-                        React.createElement("option", { value: "SHORT" }, "SHORT (aperto al ribasso)")
+                        React.createElement("option", { value: "LONG" }, "LONG"),
+                        React.createElement("option", { value: "SHORT" }, "SHORT")
                       )
-                    )
-                  ),
-                  React.createElement("div", { className: "example-chip" },
-                    React.createElement("span", { className: "example-dot" }),
-                    React.createElement("span", null,
-                      "Test di esempio: capitale 1000, leva 3, prezzo 50000, LONG."
+                    ),
+                    React.createElement("div", { className: "form-field" },
+                      React.createElement("label", { className: "label" }, "Asset price"),
+                      React.createElement("input", {
+                        className: "input",
+                        type: "number",
+                        min: "0",
+                        step: "0.01",
+                        placeholder: "e.g. 50000",
+                        value: price,
+                        onChange: (e) => setPrice(e.target.value),
+                      })
+                    ),
+                    React.createElement("div", { className: "form-field" },
+                      React.createElement("label", { className: "label" }, "Capital invested (USDT)"),
+                      React.createElement("input", {
+                        className: "input",
+                        type: "number",
+                        min: "0",
+                        step: "0.01",
+                        placeholder: "e.g. 1000",
+                        value: capital,
+                        onChange: (e) => setCapital(e.target.value),
+                      })
                     )
                   )
                 ),
                 React.createElement("div", { className: "panel results" },
-                  React.createElement("div", { className: "panel-title" },
-                    "Risultati ", React.createElement("span", null, "in tempo reale")
-                  ),
-                  React.createElement("div", { className: "badge-row" },
-                    React.createElement("div", { className: "badge" },
-                      React.createElement("span", { className: "badge-dot" }),
-                      "Semplificato: ", React.createElement("span", null, "liquidazione = 1 / leva")
-                    ),
-                    React.createElement("div", { className: "badge badge-risk" },
-                      React.createElement("span", { className: "badge-dot" }),
-                      "Rischio aumenta con la leva"
-                    )
-                  ),
                   React.createElement("div", { className: "results-grid" },
                     React.createElement("div", { className: "result-item" },
-                      React.createElement("div", { className: "result-label" }, "Valore totale posizione"),
+                      React.createElement("div", { className: "result-label" }, "Total position value"),
+                      React.createElement("div", { className: "result-label-line" }),
                       React.createElement("div", {
                         className: "result-value result-value-accent",
                       }, positionValue === null
-                        ? "-"
+                        ? "–"
                         : formatNumber(positionValue, {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
@@ -517,11 +622,12 @@
                       )
                     ),
                     React.createElement("div", { className: "result-item" },
-                      React.createElement("div", { className: "result-label" }, "Variazione a liquidazione"),
+                      React.createElement("div", { className: "result-label" }, "Variation to liquidation"),
+                      React.createElement("div", { className: "result-label-line" }),
                       React.createElement("div", {
                         className: "result-value result-value-danger",
                       }, liquidationPercent === null
-                        ? "-"
+                        ? "–"
                         : formatNumber(liquidationPercent, {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
@@ -529,11 +635,12 @@
                       )
                     ),
                     React.createElement("div", { className: "result-item" },
-                      React.createElement("div", { className: "result-label" }, "Prezzo di liquidazione"),
+                      React.createElement("div", { className: "result-label" }, "Liquidation price"),
+                      React.createElement("div", { className: "result-label-line" }),
                       React.createElement("div", {
                         className: "result-value",
                       }, liquidationPrice === null
-                        ? "-"
+                        ? "–"
                         : formatNumber(liquidationPrice, {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
@@ -542,8 +649,8 @@
                     )
                   ),
                   React.createElement("div", { className: "note" },
-                    React.createElement("strong", null, "Nota importante: "),
-                    "Calcolo teorico, la liquidazione reale dipende da exchange, fee e maintenance margin."
+                    React.createElement("strong", null, "Important note: "),
+                    "Theoretical calculation; actual liquidation depends on exchange, fees and maintenance margin."
                   )
                 )
               )
